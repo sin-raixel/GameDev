@@ -7,6 +7,7 @@ public class CoinsBehavior : MonoBehaviour
         if (other.gameObject.CompareTag("Player"))
         {
             GameManager.instance.AddCoins(1);
+            FindFirstObjectByType<PlayerMovement>().PlayCoinSound();
 
             if (GameManager.instance.coins >= 20)
             {

@@ -1,4 +1,5 @@
 using System;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,10 +15,11 @@ public class PlayerMovement : MonoBehaviour
     bool isSprinting;
     bool isMoving;
     bool isCrouching;
+    bool wasGrounded;
 
     [Header("Jumping")]
     public float jumpHeight = 1f;
-    public float grav = 1f;
+    public float grav = -9.81f;
     public float height = 2f;
     
     public float crouchHeight = 1f;
@@ -35,6 +37,13 @@ public class PlayerMovement : MonoBehaviour
     public AudioClip sprintGround;
     public AudioClip walkGravel;
     public AudioClip sprintGravel;
+    public AudioClip walkGrass;
+    public AudioClip sprintGrass;
+    public AudioClip jumpSound;
+    public AudioClip landingSound;
+    public AudioClip landingGrassSound;
+    public AudioClip landingGravelSound;
+    public AudioClip coinSound;
 
     public float footStepTimer;
     void Start()
@@ -47,23 +56,15 @@ public class PlayerMovement : MonoBehaviour
     }
 
     void Update()
-    {
-        MovePlayer();
-        
-
-        
-    if (damageTimer > 0)
-        damageTimer -= Time.deltaTime;
-
-        if (isDead)
+{
+    if (isDead)
         return;
 
     MovePlayer();
 
     if (damageTimer > 0)
         damageTimer -= Time.deltaTime;
-        
-    }
+}
 
     private void MovePlayer()
     {
@@ -109,11 +110,12 @@ public class PlayerMovement : MonoBehaviour
 
                 if(isSprinting)
                 {
-                    footStepTimer = 0.3f;
+                    footStepTimer = 0.30f;
+
                 }
                 else
                 {
-                    footStepTimer = 1.2f;
+                    footStepTimer = 0.75f;
                 }
             }
         }
@@ -121,13 +123,15 @@ public class PlayerMovement : MonoBehaviour
         {
             footStepTimer = 0f;
         }
+        
         controller.Move(move.normalized * ms * Time.deltaTime);
         
         if (Input.GetButtonDown("Jump") && grounded)
         {
-            velocity.y = Mathf.Sqrt(jumpHeight * -0.2f * grav);
+            velocity.y = Mathf.Sqrt(jumpHeight * -2f * grav);
+            audioSource.PlayOneShot(jumpSound);
 
-        }
+        } 
 
         if (Input.GetKey(KeyCode.LeftShift)) {
             ms = sprintSpeed;
@@ -151,7 +155,14 @@ public class PlayerMovement : MonoBehaviour
 
         controller.Move(velocity * Time.deltaTime); 
 
-        
+        bool landed = !wasGrounded && controller.isGrounded;
+
+        if (landed)
+        {
+            PlayLandingSound();
+        }
+
+        wasGrounded = controller.isGrounded;
       
     }
      public void OnControllerColliderHit(ControllerColliderHit hit)
@@ -222,10 +233,55 @@ public class PlayerMovement : MonoBehaviour
                     audioSource.PlayOneShot(walkGravel);
                 }
             }
+            else if(hit.collider.CompareTag("Grass")) 
+            {
+                if(isRunning)
+                {
+                    audioSource.PlayOneShot(sprintGrass);
+                }
+                else
+                {
+                    audioSource.PlayOneShot(walkGrass);
+                }
+            }
             else
             {
                 Debug.Log("No ground detected.");
             }
+
+            
+        }
+        
+        
+    }
+    void PlayLandingSound()
+{
+    RaycastHit hit;
+
+    Vector3 origin = transform.position + controller.center;
+    origin.y -= controller.height / 2f;
+
+    if (Physics.Raycast(origin, Vector3.down, out hit, 1f))
+    {
+        if (hit.collider.CompareTag("Ground"))
+        {
+            audioSource.PlayOneShot(landingSound);
+        }
+        else if (hit.collider.CompareTag("Gravel"))
+        {
+            audioSource.PlayOneShot(landingGravelSound);
+        }
+        else if (hit.collider.CompareTag("Grass"))
+        {
+            audioSource.PlayOneShot(landingGrassSound);
         }
     }
+}
+            public void PlayCoinSound()
+        {
+            if (coinSound != null && audioSource != null)
+            {
+                audioSource.PlayOneShot(coinSound);
+            }
+        }
 }

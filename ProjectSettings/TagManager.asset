@@ -12,6 +12,8 @@ TagManager:
   - Lava
   - Leaves
   - Gravel
+  - Grass
+  - Water
   layers:
   - Default
   - TransparentFX
