@@ -8,6 +8,9 @@ public class UIManagerScript : MonoBehaviour
     [SerializeField] private GameObject pause;
     [SerializeField] private GameObject death;
     [SerializeField] private GameObject win;
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip winSound;
+    [SerializeField] private AudioClip gameOverSound;
 
     private bool isActive = false;
 
@@ -54,6 +57,7 @@ public class UIManagerScript : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         death.SetActive(true);
+        audioSource.PlayOneShot(gameOverSound);
     }
 
     public void ShowWinUI()
@@ -61,6 +65,7 @@ public class UIManagerScript : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         win.SetActive(true);
+        audioSource.PlayOneShot(winSound);
     }
 
     public void OnRespawn()
