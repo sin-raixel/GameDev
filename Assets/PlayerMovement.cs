@@ -46,6 +46,7 @@ public class PlayerMovement : MonoBehaviour
     public AudioClip coinSound;
 
     public float footStepTimer;
+
     void Start()
     {
           animator = GetComponent<Animator>();
