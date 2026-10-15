@@ -10,6 +10,8 @@ TagManager:
   - Coins
   - Boulder
   - Lava
+  - Leaves
+  - Gravel
   layers:
   - Default
   - TransparentFX

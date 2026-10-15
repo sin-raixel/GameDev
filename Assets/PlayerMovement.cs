@@ -7,21 +7,36 @@ public class PlayerMovement : MonoBehaviour
     public CharacterController controller;
     public Transform cameraTransform ;
     private Animator animator;
+    [Header("Movement")]
     public float ms = 3f;
     public float rotationSpeed = 10f;
+    public float sprintSpeed = 10f;
+    bool isSprinting;
+    bool isMoving;
+    bool isCrouching;
+
+    [Header("Jumping")]
     public float jumpHeight = 1f;
     public float grav = 1f;
     public float height = 2f;
-    public float sprintSpeed = 10f;
+    
     public float crouchHeight = 1f;
     private float normalHeight;
     private Vector3 velocity;
+    [Header("Health")]
     public int health = 100;
     public Slider healthBar;
     private float damageTimer = 0f;
     public bool isDead = false;
 
-    
+    [Header("Audio")]
+    public AudioSource audioSource;
+    public AudioClip walkGround;
+    public AudioClip sprintGround;
+    public AudioClip walkGravel;
+    public AudioClip sprintGravel;
+
+    public float footStepTimer;
     void Start()
     {
           animator = GetComponent<Animator>();
@@ -73,9 +88,9 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 move = forward* vertical+ right* horizontal;    
 
-        bool isMoving = move.magnitude > 0.1f;
-        bool isSprinting = isMoving && Input.GetKey(KeyCode.LeftShift);
-        bool isCrouching =  Input.GetKey(KeyCode.LeftControl);
+        isMoving = move.magnitude > 0.1f;
+        isSprinting = isMoving && Input.GetKey(KeyCode.LeftShift);
+        isCrouching =  Input.GetKey(KeyCode.LeftControl);
 
         animator.SetBool("isMoving", isMoving);
         animator.SetBool("isSprinting", isSprinting);
@@ -86,6 +101,25 @@ public class PlayerMovement : MonoBehaviour
         {
             Quaternion targetRotation = Quaternion.LookRotation(move);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+
+            footStepTimer -= Time.deltaTime;
+            if(footStepTimer <= 0)
+            {
+                PlayFootSteps(isSprinting);
+
+                if(isSprinting)
+                {
+                    footStepTimer = 0.3f;
+                }
+                else
+                {
+                    footStepTimer = 1.2f;
+                }
+            }
+        }
+        else
+        {
+            footStepTimer = 0f;
         }
         controller.Move(move.normalized * ms * Time.deltaTime);
         
@@ -117,6 +151,7 @@ public class PlayerMovement : MonoBehaviour
 
         controller.Move(velocity * Time.deltaTime); 
 
+        
       
     }
      public void OnControllerColliderHit(ControllerColliderHit hit)
@@ -154,5 +189,43 @@ public class PlayerMovement : MonoBehaviour
 
         UIManagerScript.instance.ShowDeathUI();
         gameObject.SetActive(false);
+    }
+
+    void PlayFootSteps(bool isRunning)
+    {
+        isRunning = isSprinting;
+        RaycastHit hit;
+        Vector3 origin = transform.position + controller.center;
+        origin.y -= controller.height / 2f;
+        if(Physics.Raycast(origin, Vector3.down, out hit, 0.5f))
+        {
+            Debug.Log("Hit: " + hit.collider.tag);
+            if(hit.collider.CompareTag("Ground"))
+            {
+                if(isRunning)
+                {
+                    audioSource.PlayOneShot(sprintGround);
+                }
+                else
+                {
+                    audioSource.PlayOneShot(walkGround);
+                }
+            }
+            else if(hit.collider.CompareTag("Gravel")) 
+            {
+                if(isRunning)
+                {
+                    audioSource.PlayOneShot(sprintGravel);
+                }
+                else
+                {
+                    audioSource.PlayOneShot(walkGravel);
+                }
+            }
+            else
+            {
+                Debug.Log("No ground detected.");
+            }
+        }
     }
 }
